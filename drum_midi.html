@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MIDI Counts Display</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: black;
+            color: white;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+
+        #canvas {
+            display: block;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #controls label {
+            /* display: inline-block; */
+            padding: 8px;
+            background: blueviolet;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <div id="controls">
+        <label for="bpm">BPM: <input type="number" id="bpmInput" value="80" min="30" max="300"> <input type="range"
+                id="bpmSlider" value="80" min="30" max="300"></label>
+        <label for="counts">
+            <select id="countsSelect">
+                <option value="2">2 counts</option>
+                <option value="3">3 counts</option>
+                <option value="4" selected>4 counts</option>
+                <option value="5">5 counts</option>
+                <option value="6">6 counts</option>
+                <option value="7">7 counts</option>
+                <option value="8">8 counts</option>
+                <option value="9">9 counts</option>
+                <option value="10">10 counts</option>
+                <option value="11">11 counts</option>
+                <option value="12">12 counts</option>
+            </select>
+        </label>
+        <label for="tollerance">Tollerance:
+            <select id="tolleranceSelect">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="33" selected>33</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="250">250</option>
+            </select> ms.
+        </label>
+    </div>
+
+    <script src="midi.js"></script>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const canvas = document.getElementById('canvas');
+        let drumMidiMonitor = null;
+        let paddingRight = 150;
+
+        // DOM elements for controls
+        const bpmInput = document.getElementById('bpmInput');
+        const bpmSlider = document.getElementById('bpmSlider');
+        const countsSelect = document.getElementById('countsSelect');
+        const tolleranceSelect = document.getElementById('tolleranceSelect');
+
+        // Initialize
+        function init() {
+            drumMidiMonitor = new DrumMidiMonitor(canvas, audioCtx);
+
+            window.addEventListener('resize', resizeCanvas);
+
+            document.body.addEventListener('click', () => {
+                drumMidiMonitor.start();
+            }, { once: true });
+
+            // Event listeners for controls
+            bpmInput.addEventListener('input', updateBPM_input);
+            bpmSlider.addEventListener('input', updateBPM_slider);
+            countsSelect.addEventListener('change', updateCounts);
+            tolleranceSelect.addEventListener('change', updateTollerance);
+        }
+
+        // Resize canvas and recalculate dimensions
+        function resizeCanvas() {
+            const width = window.innerWidth - paddingRight;
+            const height = window.innerHeight;
+            drumMidiMonitor.setSize(width, height);
+        }
+
+        // Update BPM from input or slider
+        function updateBPM_input() {
+            const bpm = Math.max(30, Math.min(300, bpmSlider.value));
+            bpmSlider.value = bpm;
+            drumMidiMonitor.config.updateSetting('tempo', bpm);
+        }
+
+        function updateBPM_slider() {
+            const bpm = Math.max(30, Math.min(300, bpmSlider.value));
+            bpmInput.value = bpm;
+            drumMidiMonitor.config.updateSetting('tempo', bpm);
+        }
+
+        // Update counts per measure
+        function updateCounts() {
+            counts = parseInt(countsSelect.value);
+            drumMidiMonitor.config.updateSetting('beatsPerMeasure', bpm);
+        }
+
+        // Update tollerance
+        function updateTollerance() {
+            tollerance = parseInt(tolleranceSelect.value);
+            drumMidiMonitor.config.updateSetting('toleranceMs', bpm);
+        }
+
+        // Start the application
+        init();
+
+    </script>
+</body>
+
+</html>
